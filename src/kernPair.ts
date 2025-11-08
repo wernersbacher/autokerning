@@ -42,67 +42,95 @@ export function kernPair(
   }
 
   // Precompute overlap values across the search range for deterministic selection
-  const samples: Array<{ k: number; s: number }> = [];
+  const samples: Array<{ kernel: number; sumPixel: number }> = [];
   for (let k = -MAX_KERN; k <= MAX_KERN; k += KERN_STEP) {
-    samples.push({ k, s: overlap(blurredLeft, blurredRight, k) });
+    samples.push({
+      kernel: k,
+      sumPixel: overlap(blurredLeft, blurredRight, k),
+    });
   }
 
   if (strategy === "argmax") {
     let best = samples[0];
-    for (const p of samples) if (p.s > best.s) best = p;
-    return best.k;
+    for (const p of samples) if (p.sumPixel > best.sumPixel) best = p;
+    return best.kernel;
   }
 
   if (strategy === "midpoint") {
     const target = (minOverlap + maxOverlap) / 2;
     let best = samples[0];
-    let bestDist = Math.abs(best.s - target);
+    let bestDist = Math.abs(best.sumPixel - target);
     for (const p of samples) {
-      const d = Math.abs(p.s - target);
+      const d = Math.abs(p.sumPixel - target);
       if (d < bestDist) {
         bestDist = d;
         best = p;
       }
     }
-    return best.k;
+    return best.kernel;
   }
 
   if (strategy === "no-overlap") {
     // Choose first kern (closest to 0) where overlap <= EPS
     // scan from 0 outward (negative first)
-    if (Math.abs(samples.find((p) => p.k === 0)!.s) <= EPS) return 0;
+    if (Math.abs(samples.find((p) => p.kernel === 0)!.sumPixel) <= EPS)
+      return 0;
     // negative direction
     for (let k = -KERN_STEP; k >= -MAX_KERN; k -= KERN_STEP) {
-      const p = samples.find((x) => x.k === k)!;
-      if (p && p.s <= EPS) return k;
+      const p = samples.find((x) => x.kernel === k)!;
+      if (p && p.sumPixel <= EPS) return k;
     }
     // positive direction
     for (let k = KERN_STEP; k <= MAX_KERN; k += KERN_STEP) {
-      const p = samples.find((x) => x.k === k)!;
-      if (p && p.s <= EPS) return k;
+      const p = samples.find((x) => x.kernel === k)!;
+      if (p && p.sumPixel <= EPS) return k;
     }
     return 0; // fallback
   }
 
   if (strategy === "conservative") {
-    // Choose the most negative kern (smallest k) among all samples where s <= EPS.
-    const good = samples.filter((p) => p.s <= EPS).map((p) => p.k);
-    if (good.length > 0) {
-      return Math.min(...good);
+    // Iterate kernels starting from the largest (most positive) towards the
+    // smallest (most negative). We want to find the first kernel where the
+    // overlap exceeds EPS and return the previous kernel (which will have
+    // sumPixel <= EPS). This handles the case where samples start with
+    // zeros on the positive side and begin to grow when moving negative.
+    //
+    // Sort samples by kernel descending (positive -> negative)
+    const sorted = samples.slice().sort((a, b) => b.kernel - a.kernel);
+
+    // Track the last kernel seen that was <= EPS. Initialize to null.
+    let lastGoodKernel: number | null = null;
+
+    for (const p of sorted) {
+      if (p.sumPixel <= EPS) {
+        lastGoodKernel = p.kernel;
+        continue;
+      }
+      // p.sumPixel > EPS: return the previously-seen kernel (closest to
+      // positive side) that was <= EPS. If none exists, fall back to 0.
+      return lastGoodKernel !== null ? lastGoodKernel : 0;
     }
+
+    // If we finished the loop, all samples had sumPixel <= EPS. Choose the
+    // most negative kernel among them (conservative: most negative allowed).
+    if (lastGoodKernel !== null) {
+      // sorted is descending; the last element is the most negative kernel
+      return Math.min(...samples.map((p) => p.kernel));
+    }
+
     return 0;
   }
 
   // default: 'calibrated' (original behaviour) using samples
   // if s(0) within [minOverlap,maxOverlap] => 0
-  const s0 = samples.find((p) => p.k === 0)!.s;
+  const s0 = samples.find((p) => p.kernel === 0)!.sumPixel;
   if (s0 >= minOverlap && s0 <= maxOverlap) return 0;
 
   if (s0 < minOverlap) {
     // return first negative k where s >= minOverlap
-    for (let k = -KERN_STEP; k >= -MAX_KERN; k -= KERN_STEP) {
-      const p = samples.find((x) => x.k === k)!;
-      if (p.s >= minOverlap) return k;
+    for (let kern = -KERN_STEP; kern >= -MAX_KERN; kern -= KERN_STEP) {
+      const p = samples.find((x) => x.kernel === kern)!;
+      if (p.sumPixel >= minOverlap) return kern;
     }
     return 0;
   }
@@ -110,8 +138,8 @@ export function kernPair(
   if (s0 > maxOverlap) {
     // return first positive k where s <= maxOverlap
     for (let k = KERN_STEP; k <= MAX_KERN; k += KERN_STEP) {
-      const p = samples.find((x) => x.k === k)!;
-      if (p.s <= maxOverlap) return k;
+      const p = samples.find((x) => x.kernel === k)!;
+      if (p.sumPixel <= maxOverlap) return k;
     }
     return 0;
   }

@@ -9,7 +9,7 @@
     "width": 68
   },
   "calibration": {
-    "minS": 0,
+    "minS": 0.5506277822549819,
     "maxS": 0.8587459391828431
   },
   "entries": [
