@@ -1,0 +1,1 @@
+{"root":["./src/blur.ts","./src/calibrate.ts","./src/cli.ts","./src/debug-algorithm.ts","./src/debug-cli.ts","./src/debug-pairs.ts","./src/debug-verbose.ts","./src/debug.ts","./src/generate-kerning.ts","./src/glyph.ts","./src/kernpair.ts","./src/overlap.ts","./src/render-kerning.ts","./src/simple-debug.ts","./src/test-overlap.ts"],"version":"5.9.3"}

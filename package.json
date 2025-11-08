@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/cli.js",
-    "dev": "tsx src/cli.ts"
+    "dev": "tsx src/cli.ts",
+    "debug-verbose": "node dist/debug-verbose.js"
   },
   "dependencies": {
     "canvas": "^3.2.0",

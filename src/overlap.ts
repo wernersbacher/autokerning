@@ -1,90 +1,76 @@
 import ndarray from "ndarray";
 import { Glyph } from "./glyph.js";
+import { createCanvas } from "canvas";
 
 let debugCount = 0;
 
-/** Compute pixel overlap (sum of squared values)
- * Positions glyphs: left at x=0, right at x=left.advance+kern
- * Negative kern brings them closer (moves right left)
+/**
+ * Compute pixel overlap using composition logic from Python version
+ *
+ * Intersection rectangle layout:
+ * - Right glyph at x ∈ [0, right.width)
+ * - Left glyph at x ∈ [lOffset, lOffset + left.width)
+ * - Only pixels in both ranges contribute to overlap
  */
 export function overlap(left: Glyph, right: Glyph, kern: number): number {
-  // Position right glyph relative to left glyph's width
-  // Negative kern brings glyphs closer (right starts earlier)
-  const rightStart = left.width + kern;
+  const height = left.height;
 
-  let sum = 0;
-  let pixelCount = 0;
-  let nonZeroCount = 0;
-  let leftNonZero = 0,
-    rightNonZero = 0;
+  // Calculate offset where left glyph is positioned relative to right
+  const lOffset = -(left.advance + left.bboxOffsetX) + right.bboxOffsetX - kern;
 
-  // DEBUG: Check what pixels are actually in each bitmap
-  if (false) {
-    // Disabled debug output
+  // Find intersection range in x-dimension
+  const xStart = Math.max(0, lOffset);
+  const xEnd = Math.min(right.width, lOffset + left.width);
+  const width = Math.max(0, xEnd - xStart);
+
+  if (debugCount < 3 && width > 0) {
     console.error(
-      `[DEBUG] left: size=${left.width}x${
-        left.height
-      }, advance=${left.advance.toFixed(2)}`
-    );
-    console.error(
-      `[DEBUG] right: size=${right.width}x${
-        right.height
-      }, advance=${right.advance.toFixed(2)}`
-    );
-    // Sample some pixels from left
-    let lSample = 0;
-    for (let y = 0; y < Math.min(5, left.height); y++) {
-      for (let x = 0; x < Math.min(10, left.width); x++) {
-        if ((left.bitmap.get(y, x) ?? 0) > 0) lSample++;
-      }
-    }
-    console.error(
-      `[DEBUG] left first 5x10 region has ${lSample} nonzero pixels`
+      `[OVERLAP] pair=${left.char}${right.char}, kern=${kern
+        .toString()
+        .padStart(4)}, lOffset=${lOffset
+        .toFixed(2)
+        .padStart(8)}, [${xStart.toFixed(0)}, ${xEnd.toFixed(0)}) width=${width
+        .toFixed(0)
+        .padStart(4)}`
     );
   }
 
-  // Iterate through all pixels
-  const maxX = Math.ceil(left.width + right.width + Math.abs(kern));
-  const maxY = Math.max(left.height, right.height);
+  if (width <= 0) {
+    return 0;
+  }
 
-  for (let y = 0; y < maxY; y++) {
-    for (let x = 0; x < maxX; x++) {
-      // Get left pixel at x
-      let lVal = 0;
-      if (x < left.width && y < left.height) {
-        const val = left.bitmap.get(y, x);
-        lVal = val ?? 0;
-        if (lVal > 0) leftNonZero++;
+  // Compute intersection by multiplying pixel values
+  let sum = 0;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = xStart; x < xEnd; x++) {
+      // Right glyph pixel at (x, y)
+      let rVal = 0;
+      if (x >= 0 && x < right.width && y < right.height) {
+        rVal = right.bitmap.get(y, x) ?? 0;
       }
 
-      // Get right pixel at (x - rightStart)
-      let rVal = 0;
-      const rx = x - rightStart;
-      if (rx >= 0 && rx < right.width && y < right.height) {
-        const val = right.bitmap.get(y, rx);
-        rVal = val ?? 0;
-        if (rVal > 0) rightNonZero++;
+      // Left glyph pixel at (x - lOffset, y)
+      let lVal = 0;
+      const lx = x - lOffset;
+      if (lx >= 0 && lx < left.width && y < left.height) {
+        lVal = left.bitmap.get(y, Math.floor(lx)) ?? 0;
       }
 
       // Sum product of squared values
-      const product = lVal * lVal * rVal * rVal;
-      sum += product;
-      pixelCount++;
-      if (product > 0) nonZeroCount++;
+      sum += lVal * lVal * rVal * rVal;
     }
   }
 
-  if (debugCount < 0 && kern <= 0) {
-    // Disabled debug output
-    console.error(
-      `[OVERLAP] kern=${kern}, rightStart=${rightStart.toFixed(
-        2
-      )}, pixels=${pixelCount}, leftNonZero=${leftNonZero}, rightNonZero=${rightNonZero}, nonZeroProducts=${nonZeroCount}, sum=${sum.toFixed(
-        4
-      )}`
-    );
+  if (debugCount < 3 && width > 0) {
+    console.error(`         -> overlap=${sum.toFixed(2).padStart(8)}`);
     debugCount++;
   }
 
   return sum;
+}
+
+// Export function to set bbox offset (needed during glyph creation)
+export function setGlyphBboxOffset(glyph: Glyph, offsetX: number): void {
+  (glyph as any).bboxOffsetX = offsetX;
 }

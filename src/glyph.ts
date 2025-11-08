@@ -8,6 +8,7 @@ export interface Glyph {
   width: number;
   height: number;
   advance: number;
+  bboxOffsetX: number; // x-bearing offset used for overlap calculation
   bitmap: NdArray<Float32Array>;
 }
 
@@ -27,8 +28,16 @@ export function renderGlyph(font: opentype.Font, char: string): Glyph {
 
   // Create canvas with some padding for blur/antialiasing
   const PADDING = 10;
+
+  // Use font metrics (ascender/descender) to produce a consistent baseline
+  const scale = FONT_SIZE / (font.unitsPerEm || 1000);
+  const ascenderPx = (font.ascender ?? 800) * scale;
+  const descenderPx = (font.descender ?? -200) * scale;
+  const emHeight = Math.ceil(ascenderPx - descenderPx);
+
   const canvasWidth = glyphWidth + 2 * PADDING;
-  const canvasHeight = glyphHeight + 2 * PADDING;
+  // allocate canvas to cover full em box so baseline is same for all glyphs
+  const canvasHeight = emHeight + 2 * PADDING;
 
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -39,9 +48,11 @@ export function renderGlyph(font: opentype.Font, char: string): Glyph {
 
   // Black glyph
   ctx.fillStyle = "black";
-  // Center glyph vertically in canvas, with horizontal padding
-  const verticalCenter = glyphHeight / 2 - (bbox.y1 + bbox.y2) / 2;
-  ctx.translate(PADDING - bbox.x1, PADDING + verticalCenter);
+  // Translate so that the font baseline maps to a consistent y in the canvas
+  // Path was generated at y=FONT_SIZE; we want that baseline at PADDING + ascenderPx
+  const baselineCanvasY = PADDING + ascenderPx;
+  const translateY = baselineCanvasY - FONT_SIZE;
+  ctx.translate(PADDING - bbox.x1, translateY);
   // @ts-ignore
   path.draw(ctx);
   ctx.fill();
@@ -69,6 +80,7 @@ export function renderGlyph(font: opentype.Font, char: string): Glyph {
     width: canvasWidth,
     height: canvasHeight,
     advance: advance,
+    bboxOffsetX: -bbox.x1 + PADDING, // Store the x-bearing offset for overlap calc
     bitmap: gray,
   };
 }

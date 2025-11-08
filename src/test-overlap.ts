@@ -14,6 +14,7 @@ import { overlap } from "./overlap.js";
     width: t.width,
     height: t.height,
     advance: t.advance,
+    bboxOffsetX: t.bboxOffsetX,
     bitmap: tBlurredBitmap,
   };
 
@@ -38,7 +39,7 @@ import { overlap } from "./overlap.js";
   console.log(`Testing T + T:`);
   console.log(`  T advance: ${t.advance.toFixed(2)}, width: ${t.width}`);
 
-  for (let kern of [-100, -80, -70, -60, -50, -40, -30, -20, -16, -10, 0]) {
+  for (let kern of [-40, -30, -20, -16, -10, 0]) {
     const ov = overlap(tBlurred, tBlurred, kern);
     console.log(
       `  kern=${kern.toString().padStart(4)}: overlap=${ov.toFixed(2)}`

@@ -1,9 +1,11 @@
 ﻿import ndarray, { NdArray } from "ndarray";
+import config from "./config.js";
 
 /** Gaussian blur using a separable kernel */
 export function gaussianBlur(
   input: NdArray<Float32Array>,
-  sigma = 0.2 * input.shape[1]
+  // Use factor from config so it is centrally adjustable
+  sigma = config.BLUR_SIGMA_FACTOR * input.shape[1]
 ): NdArray<Float32Array> {
   const width = input.shape[1];
   const height = input.shape[0];
