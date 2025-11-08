@@ -28,24 +28,25 @@ const CANVAS_HEIGHT = 600;
 
 // Create example sentences using common pairs
 const EXAMPLE_SENTENCES: { [key: string]: string } = {
-  AV: "Avocado Valley",
-  AW: "Awards Awaiting",
-  AY: "Anyone Anyway",
-  AF: "Africa Frozen",
-  AB: "Absolute Beginning",
-  AD: "Advanced Design",
-  AG: "Agile Garden",
-  AQ: "Aquatic Quality",
-  AR: "Architecture Rising",
-  AS: "Assistant Assisting",
-  AX: "Axis Axle",
-  AZ: "Azure Azimuth",
-  VA: "Valid Answers",
-  FA: "Fantastic Adventures",
-  Pa: "Particular Party",
-  WA: "Waiter Walking",
-  WO: "Worried Workplace",
+  AV: "AVOCADO VALLEY",
+  AW: "AWARDS AWAITING",
+  AY: "ANYONE ANYWAY",
+  AF: "AFRICA FROZEN",
+  AB: "ABSOLUTE BEGINNING",
+  AD: "ADVANCED DESIGN",
+  AG: "AGILE GARDEN",
+  AQ: "AQUATIC QUALITY",
+  AR: "ARCHITECTURE RISING",
+  AS: "ASSISTANT ASSISTING",
+  AX: "AXIS AXLE",
+  AZ: "AZURE AZIMUTH",
+  VA: "VALID ANSWERS",
+  FA: "FANTASTIC ADVENTURES",
+  Pa: "Particular PARTY",
+  WA: "WAS GEHT AB",
+  WO: "WO GEHEN WIR HIN?",
   Wa: "Waffle Wagon",
+  Ta: "Tactical Table",
   Ye: "Yellow Yesterday",
   Yp: "Yuppie Young",
   Po: "Powerful Poet",
@@ -135,10 +136,20 @@ function renderText(
 
     // Save to PNG
     const buffer = canvas.toBuffer("image/png");
-    const filename = `${outDir}/${pair}.png`;
+
+    // Build a case-unique filename: include code points so 'WA' != 'Wa' on case-insensitive filesystems
+    const codePoints = Array.from(pair).map((c) =>
+      c.codePointAt(0)?.toString(16).toUpperCase()
+    );
+    const safeFilename = `${pair.replace(
+      /[^A-Za-z0-9_-]/g,
+      "_"
+    )}_${codePoints.join("-")}.png`;
+    const filename = `${outDir}/${safeFilename}`;
     fs.writeFileSync(filename, buffer);
 
-    console.log(`✓ ${pair}: ${kerningTable[pair].toFixed(2)}%`);
+    // Log human-readable pair and saved filename
+    console.log(`✓ ${pair}: ${kerningTable[pair].toFixed(2)}% -> ${filename}`);
     exampleCount++;
   }
 
