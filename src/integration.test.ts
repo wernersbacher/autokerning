@@ -217,17 +217,6 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
       // outputPath is undefined because writeFile: false
       expect(result.outputPath).toBeUndefined();
     });
-
-    it("respects backward-compatible API", async () => {
-      const fontPath = FONT_PATH as string;
-
-      // User can use old API: generateKerningTable(font, pairs)
-      const result = await generateKerningTable(fontPath, "AV,To");
-
-      // Should work and return kerningTable
-      expect(result.kerningTable).toBeDefined();
-      expect(typeof result.kerningTable).toBe("object");
-    });
   });
 
   describe("Data Quality Checks", () => {

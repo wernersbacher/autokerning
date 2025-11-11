@@ -1,5 +1,6 @@
 ﻿import ndarray, { NdArray } from "ndarray";
 import config from "./config.js";
+import { logger } from "./log.js";
 
 /** Gaussian blur using a separable kernel */
 export function gaussianBlur(
@@ -13,6 +14,11 @@ export function gaussianBlur(
   if (kernelWidth !== undefined) {
     sigma = kernelWidth / 4; // Matches Python: c = KERNEL_WIDTH / 4
   }
+  logger.debug(
+    `[GAUSSIAN] enter: kernelWidth=${
+      kernelWidth ?? "(auto)"
+    }, sigma=${sigma.toFixed(2)}`
+  );
   const width = input.shape[1];
   const height = input.shape[0];
   const radius = Math.round(sigma);
@@ -67,5 +73,11 @@ export function gaussianBlur(
     }
   }
 
-  return ndarray(outData, [height, width]);
+  const out = ndarray(outData, [height, width]);
+  logger.debug(
+    `[GAUSSIAN] exit: kernelWidth=${
+      kernelWidth ?? "(auto)"
+    }, radius=${radius}, width=${width}, height=${height}`
+  );
+  return out;
 }

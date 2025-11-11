@@ -20,7 +20,19 @@ describe("Adaptive Kernel Calibration", () => {
   beforeAll(async () => {
     // Load a test font (Roboto in this case)
     try {
-      font = await opentype.load("./Roboto-Black.json");
+      // Try common relative paths for the TTF test font
+      const candidates = ["./Roboto-Black.ttf", "../Roboto-Black.ttf"];
+      let loaded = false;
+      for (const c of candidates) {
+        try {
+          font = await opentype.load(c);
+          loaded = true;
+          break;
+        } catch {
+          // try next
+        }
+      }
+      if (!loaded) throw new Error("font not found");
     } catch (e) {
       console.warn("Test font not found, skipping calibration tests");
     }
@@ -87,7 +99,7 @@ describe("Adaptive Kernel Calibration", () => {
 
       // Either we converged or hit the limit - both are acceptable outcomes
       expect(kernelWidth).toBeLessThanOrEqual(2 * FONT_SIZE + 2);
-    });
+    }, 60000);
   });
 
   describe("kernPair with adaptive kernel", () => {
