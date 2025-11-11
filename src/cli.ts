@@ -3,18 +3,14 @@ import { Command } from "commander";
 import * as opentype from "opentype.js";
 import { renderGlyph } from "./glyph.js";
 import { kernPair } from "./kernPair.js";
-import { gaussianBlur } from "./blur.js";
-import { overlap } from "./overlap.js";
+
 import { generateKerningTable, findS } from "./generateKerningTable.js";
-import { logger } from "./log.js";
 
 const program = new Command();
 
 program
-  .name("autokern-ts")
-  .description(
-    "Auto-compute kerning values for glyph pairs or generate kerning JSON table"
-  )
+  .name("autokerning")
+  .description("Auto-compute kerning values for fonts")
   .argument("<fontfile>", "Path to font file (.ttf/.otf)")
   .argument("[pairs...]")
   .option("-s, --size <n>", "Font size (default 100)", "100")
@@ -29,9 +25,11 @@ program
   .parse(process.argv);
 
 const fontfile = program.args[0];
-const pairs = program.args.slice(1);
+let pairs = program.args.slice(1);
 const outputFile = program.opts().output;
 const pairsList = program.opts().pairs;
+
+import { COMMON_PAIRS } from "./commonPairs.js";
 
 // use findS exported from generateKerningTable (calibrated adaptive kernel)
 
@@ -48,11 +46,9 @@ const pairsList = program.opts().pairs;
     return;
   }
 
+  // If no pairs provided, use default common pairs
   if (!pairs.length) {
-    logger.error(
-      "No pairs provided. Use --output to generate kerning JSON or specify pairs."
-    );
-    process.exit(1);
+    pairs = COMMON_PAIRS;
   }
 
   const font = await opentype.load(fontfile);

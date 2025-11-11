@@ -14,7 +14,7 @@ const levels: Record<LogLevel, number> = {
 const current: LogLevel =
   env === "info" || env === "warn" || env === "error"
     ? (env as LogLevel)
-    : "debug";
+    : "info";
 
 function shouldLog(level: LogLevel) {
   return levels[level] >= levels[current];

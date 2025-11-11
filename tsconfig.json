@@ -10,7 +10,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node"],
+    "rootDir": "src"
   },
-  "include": ["src", "integration-tests/calibrated.integration.test.ts"]
+  "include": ["src"],
+  "exclude": ["**/*.test.ts", "integration-tests"]
 }
