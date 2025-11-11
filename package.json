@@ -1,14 +1,24 @@
 {
-  "name": "autokern-ts",
+  "name": "autokerning",
   "version": "1.0.0",
+  "author": "wernersbacher <wernersbacher@gmail.com>",
   "type": "module",
   "main": "dist/cli.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/cli.js",
-    "dev": "tsx src/cli.ts",
-    "debug-verbose": "node dist/debug-verbose.js"
+    "dev": "tsx src/cli.ts"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wernersbacher/autokerning"
+  },
+  "keywords": [
+    "kerning",
+    "autokern",
+    "font",
+    "glyph"
+  ],
   "devDependencies": {
     "@types/ndarray": "^1.0.14",
     "@types/node": "^22.0.0",
