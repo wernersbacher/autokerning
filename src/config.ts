@@ -7,9 +7,8 @@ export const BLUR_SIGMA_FACTOR = parseFloat(
 export const MAX_KERN = parseInt(process.env.MAX_KERN || "30", 10);
 export const KERN_STEP = parseInt(process.env.KERN_STEP || "1", 10);
 export const DEBUG_STEP = parseInt(process.env.DEBUG_STEP || "5", 10);
-// Selection strategy for kernPair: 'calibrated' (default), 'no-overlap', 'argmax', 'midpoint'
 export const SELECTION_STRATEGY =
-  process.env.SELECTION_STRATEGY || "conservative";
+  process.env.SELECTION_STRATEGY || "calibrated";
 // Epsilon for 'no-overlap' strategy (treat overlap <= EPS as acceptable/no visible overlap)
 export const NO_OVERLAP_EPS = parseFloat(process.env.NO_OVERLAP_EPS || "1");
 
