@@ -3,6 +3,7 @@ manuals/
 *.ttf
 !Roboto-*.ttf
 
+*.tgz
 *.py
 *.png
 *.json

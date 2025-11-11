@@ -42,19 +42,30 @@ export function overlap(left: Glyph, right: Glyph, kern: number): number {
   // Compute intersection by multiplying pixel values
   let sum = 0;
 
+  // Use direct typed-array access to avoid ndarray.get overhead inside tight loops
+  const rData = (right.bitmap as any).data as Float32Array | Float64Array;
+  const lData = (left.bitmap as any).data as Float32Array | Float64Array;
+  const rW = right.width;
+  const lW = left.width;
+  const rH = right.height;
+  const lH = left.height;
+
   for (let y = 0; y < height; y++) {
+    const rRowOff = y * rW;
+    const lRowOff = y * lW;
     for (let x = xStart; x < xEnd; x++) {
       // Right glyph pixel at (x, y)
       let rVal = 0;
-      if (x >= 0 && x < right.width && y < right.height) {
-        rVal = right.bitmap.get(y, x) ?? 0;
+      if (x >= 0 && x < rW && y < rH) {
+        rVal = rData[rRowOff + x] ?? 0;
       }
 
       // Left glyph pixel at (x - lOffset, y)
       let lVal = 0;
       const lx = x - lOffset;
-      if (lx >= 0 && lx < left.width && y < left.height) {
-        lVal = left.bitmap.get(y, Math.floor(lx)) ?? 0;
+      const li = Math.floor(lx);
+      if (li >= 0 && li < lW && y < lH) {
+        lVal = lData[lRowOff + li] ?? 0;
       }
 
       // Sum product of squared values

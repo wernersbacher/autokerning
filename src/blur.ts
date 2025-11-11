@@ -16,39 +16,56 @@ export function gaussianBlur(
   const width = input.shape[1];
   const height = input.shape[0];
   const radius = Math.round(sigma);
-  const kernel = Array.from({ length: radius * 2 + 1 }, (_, i) => {
-    const x = i - radius;
-    return Math.exp(-(x * x) / (2 * sigma * sigma));
-  });
-  const sum = kernel.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < kernel.length; i++) kernel[i] /= sum;
+  // Cache kernel arrays by radius to avoid recomputing for same sigma
+  const kernelCache: { [r: number]: Float64Array } =
+    (gaussianBlur as any)._kernelCache || {};
+  (gaussianBlur as any)._kernelCache = kernelCache;
 
-  const temp = ndarray(new Float32Array(width * height), [height, width]);
-  const out = ndarray(new Float32Array(width * height), [height, width]);
+  let kernel = kernelCache[radius];
+  if (!kernel) {
+    const klen = radius * 2 + 1;
+    const tmp = new Float64Array(klen);
+    let s = 0;
+    for (let i = 0; i < klen; i++) {
+      const x = i - radius;
+      const v = Math.exp(-(x * x) / (2 * sigma * sigma));
+      tmp[i] = v;
+      s += v;
+    }
+    for (let i = 0; i < klen; i++) tmp[i] /= s;
+    kernel = tmp;
+    kernelCache[radius] = kernel;
+  }
 
-  // horizontal pass
+  const inData = (input as any).data as Float32Array | Float64Array;
+  const tempData = new Float32Array(width * height);
+  const outData = new Float32Array(width * height);
+
+  // horizontal pass (direct indexing)
   for (let y = 0; y < height; y++) {
+    const rowOff = y * width;
     for (let x = 0; x < width; x++) {
       let acc = 0;
       for (let i = -radius; i <= radius; i++) {
         const xi = Math.min(width - 1, Math.max(0, x + i));
-        acc += input.get(y, xi) * kernel[i + radius];
+        acc += inData[rowOff + xi] * kernel[i + radius];
       }
-      temp.set(y, x, acc);
+      tempData[rowOff + x] = acc;
     }
   }
 
   // vertical pass
   for (let y = 0; y < height; y++) {
+    const rowOff = y * width;
     for (let x = 0; x < width; x++) {
       let acc = 0;
       for (let i = -radius; i <= radius; i++) {
         const yi = Math.min(height - 1, Math.max(0, y + i));
-        acc += temp.get(yi, x) * kernel[i + radius];
+        acc += tempData[yi * width + x] * kernel[i + radius];
       }
-      out.set(y, x, acc);
+      outData[rowOff + x] = acc;
     }
   }
 
-  return out;
+  return ndarray(outData, [height, width]);
 }

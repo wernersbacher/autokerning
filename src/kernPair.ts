@@ -48,7 +48,7 @@ export function kernPair(
   const strategy = config.SELECTION_STRATEGY || "conservative";
   const EPS = config.NO_OVERLAP_EPS || 1;
 
-  console.info(`KernPair strategy: ${strategy}, EPS=${EPS}`);
+  console.debug(`KernPair strategy: ${strategy}, EPS=${EPS}`);
 
   // Precompute overlap values across the search range for deterministic selection
   const samples: Array<{ kernel: number; sumPixel: number }> = [];

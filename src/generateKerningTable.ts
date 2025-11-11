@@ -108,7 +108,7 @@ function findS(font: opentype.Font): [number, number, number] {
     const maxS = Math.max(...ss);
     const ratio = minS / maxS;
 
-    console.info(
+    console.debug(
       `findS iteration ${iteration}: kernelWidth=${kernelWidth}, minS=${minS.toFixed(
         2
       )}, maxS=${maxS.toFixed(2)}, ratio=${ratio.toFixed(3)}`
@@ -199,6 +199,7 @@ export async function generateKerningTable(
     if (!font.hasChar(lch) || !font.hasChar(rch)) {
       continue;
     }
+    process.stdout.write(`Calculating pair ${pair}\r`);
     const left = renderGlyph(font, lch);
     const right = renderGlyph(font, rch);
     // Pass kernelWidth to kernPair for calibrated blur

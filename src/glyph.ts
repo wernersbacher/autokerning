@@ -59,19 +59,17 @@ export function renderGlyph(font: opentype.Font, char: string): Glyph {
 
   // Extract bitmap: invert so black (glyph) = high values
   const img = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-  const gray = ndarray(new Float32Array(canvasWidth * canvasHeight), [
-    canvasHeight,
-    canvasWidth,
-  ]);
-
+  const buf = new Float32Array(canvasWidth * canvasHeight);
   for (let y = 0; y < canvasHeight; y++) {
+    const rowOff = y * canvasWidth;
     for (let x = 0; x < canvasWidth; x++) {
       const idx = (y * canvasWidth + x) * 4;
       const red = img.data[idx];
       // Invert: white (255) -> 0, black (0) -> 1
-      gray.set(y, x, (255 - red) / 255.0);
+      buf[rowOff + x] = (255 - red) / 255.0;
     }
   }
+  const gray = ndarray(buf, [canvasHeight, canvasWidth]);
 
   const advance = font.getAdvanceWidth(char, FONT_SIZE);
 
