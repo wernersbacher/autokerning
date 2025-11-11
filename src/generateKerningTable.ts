@@ -4,6 +4,7 @@ import { kernPair } from "./kernPair.js";
 import { gaussianBlur } from "./blur.js";
 import { overlap } from "./overlap.js";
 import config from "./config.js";
+import { logger } from "./log.js";
 
 // Common kerning pairs in typography
 const COMMON_PAIRS = [
@@ -78,7 +79,7 @@ const COMMON_PAIRS = [
  * Matches Python algorithm: find kernel size where min_s > max_s / 2
  * @returns [minS, maxS, usedKernelWidth]
  */
-function findS(font: opentype.Font): [number, number, number] {
+export function findS(font: opentype.Font): [number, number, number] {
   const TUNING_CHARS = "lno";
   const FONT_SIZE = config.FONT_SIZE;
   let kernelWidth = Math.round(0.2 * FONT_SIZE);
@@ -108,7 +109,7 @@ function findS(font: opentype.Font): [number, number, number] {
     const maxS = Math.max(...ss);
     const ratio = minS / maxS;
 
-    console.debug(
+    logger.debug(
       `findS iteration ${iteration}: kernelWidth=${kernelWidth}, minS=${minS.toFixed(
         2
       )}, maxS=${maxS.toFixed(2)}, ratio=${ratio.toFixed(3)}`
@@ -116,7 +117,7 @@ function findS(font: opentype.Font): [number, number, number] {
 
     // Check calibration condition (matching Python algorithm)
     if (minS > maxS / 2) {
-      console.info(
+      logger.info(
         `✓ Calibration converged: kernelWidth=${kernelWidth}, minS=${minS.toFixed(
           2
         )}, maxS=${maxS.toFixed(2)}`
@@ -129,7 +130,7 @@ function findS(font: opentype.Font): [number, number, number] {
 
     // Safety check
     if (kernelWidth > 2 * FONT_SIZE) {
-      console.warn(
+      logger.warn(
         `⚠️ Failed to find reasonable kernel size (exceeded ${
           2 * FONT_SIZE
         }). Using kernelWidth=${kernelWidth - 2}`

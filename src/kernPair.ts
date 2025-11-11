@@ -2,6 +2,7 @@
 import { gaussianBlur } from "./blur.js";
 import { overlap } from "./overlap.js";
 import config from "./config.js";
+import { logger } from "./log.js";
 
 const MAX_KERN = config.MAX_KERN; // positive number, we use negative range for overlap
 const KERN_STEP = Math.max(1, config.KERN_STEP);
@@ -48,7 +49,7 @@ export function kernPair(
   const strategy = config.SELECTION_STRATEGY || "conservative";
   const EPS = config.NO_OVERLAP_EPS || 1;
 
-  console.debug(`KernPair strategy: ${strategy}, EPS=${EPS}`);
+  logger.debug(`KernPair strategy: ${strategy}, EPS=${EPS}`);
 
   // Precompute overlap values across the search range for deterministic selection
   const samples: Array<{ kernel: number; sumPixel: number }> = [];

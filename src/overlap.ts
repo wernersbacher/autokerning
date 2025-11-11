@@ -1,6 +1,7 @@
 import ndarray from "ndarray";
 import { Glyph } from "./glyph.js";
 import { createCanvas } from "canvas";
+import { logger } from "./log.js";
 
 let debugCount = 0;
 
@@ -24,7 +25,7 @@ export function overlap(left: Glyph, right: Glyph, kern: number): number {
   const width = Math.max(0, xEnd - xStart);
 
   if (debugCount < 3 && width > 0) {
-    console.error(
+    logger.debug(
       `[OVERLAP] pair=${left.char}${right.char}, kern=${kern
         .toString()
         .padStart(4)}, lOffset=${lOffset
@@ -74,7 +75,7 @@ export function overlap(left: Glyph, right: Glyph, kern: number): number {
   }
 
   if (debugCount < 3 && width > 0) {
-    console.error(`         -> overlap=${sum.toFixed(2).padStart(8)}`);
+    logger.error(`         -> overlap=${sum.toFixed(2).padStart(8)}`);
     debugCount++;
   }
 
