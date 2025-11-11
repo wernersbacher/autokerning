@@ -2,14 +2,14 @@
 import * as fs from "fs";
 import { Command } from "commander";
 import * as opentype from "opentype.js";
-import { renderGlyph, Glyph as RenderedGlyph } from "./glyph.js";
-import { gaussianBlur } from "./blur.js";
-import { overlap } from "./overlap.js";
-import { kernPair } from "./kernPair.js";
-import { saveBitmapAsPNG, logBitmapStats } from "./debug.js";
+import { renderGlyph } from "../src/glyph.js";
+import { gaussianBlur } from "../src/blur.js";
+import { overlap } from "../src/overlap.js";
+import { kernPair } from "../src/kernPair.js";
+import { saveBitmapAsPNG, logBitmapStats } from "./debug.ts";
 import ndarray from "ndarray";
 import { createCanvas } from "canvas";
-import config from "./config.js";
+import config from "../src/config.js";
 
 const program = new Command();
 program
@@ -116,7 +116,8 @@ function computeIntersectionBitmap(left: any, right: any, kern: number) {
 }
 
 (async () => {
-  const font = await opentype.load(fontfile);
+  // The program arguments are handled above; cast fontfile to any for opentype
+  const font = await opentype.load(program.args[0] as any);
 
   // compute calibration thresholds (minS, maxS) the same way as generate-kerning
   function findS(font: opentype.Font): [number, number] {

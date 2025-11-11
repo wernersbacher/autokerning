@@ -9,14 +9,6 @@
     "dev": "tsx src/cli.ts",
     "debug-verbose": "node dist/debug-verbose.js"
   },
-  "dependencies": {
-    "canvas": "^3.2.0",
-    "commander": "^14.0.2",
-    "harfbuzzjs": "^0.4.13",
-    "ndarray": "^1.0.19",
-    "ndarray-ops": "^1.2.2",
-    "opentype.js": "^1.3.4"
-  },
   "devDependencies": {
     "@types/ndarray": "^1.0.14",
     "@types/node": "^22.0.0",
