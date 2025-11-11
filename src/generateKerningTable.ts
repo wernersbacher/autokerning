@@ -94,20 +94,40 @@ function findS(font: opentype.Font): [number, number] {
  * @param outputfile Output file path (optional)
  * @param pairs Comma-separated string of pairs to analyze (optional)
  */
+export type GenerateKerningOptions = {
+  pairs?: string; // comma-separated pairs
+  outputfile?: string; // filename to write, if undefined no write performed unless writeFile=true
+  writeFile?: boolean; // default true for backward compatibility
+};
+
 export async function generateKerningTable(
   fontfile: string,
-  outputfile?: string,
-  pairs?: string
-): Promise<{ outputPath: string; kerningTable: Record<string, number> }> {
+  opts: GenerateKerningOptions | string | undefined = undefined
+): Promise<{ outputPath?: string; kerningTable: Record<string, number> }> {
+  // Backwards-compatible call signatures: (fontfile, outputfile, pairs)
+  let outputfile: string | undefined;
+  let pairs: string | undefined;
+  let writeFile = true;
+
+  if (typeof opts === "string") {
+    // old 2nd arg was pairs
+    pairs = opts;
+  } else if (typeof opts === "object" && opts !== null) {
+    outputfile = (opts as GenerateKerningOptions).outputfile;
+    pairs = (opts as GenerateKerningOptions).pairs;
+    writeFile = (opts as GenerateKerningOptions).writeFile ?? true;
+  }
+
   const font = await opentype.load(fontfile);
   const [minS, maxS] = findS(font);
+
   // Get font name for output file
   const fontName =
     outputfile ||
-    fontfile
+    (fontfile
       .split("/")
       .pop()
-      ?.replace(/\.(ttf|otf)$/i, "") + ".json";
+      ?.replace(/\.(ttf|otf)$/i, "") || "font") + ".json";
 
   // Determine pairs to analyze
   let pairList: string[];
@@ -132,12 +152,17 @@ export async function generateKerningTable(
     const kernPercent = (kernPx / left.advance) * 100;
     kerningTable[pair] = Math.round(kernPercent * 100) / 100;
   }
-  const output = {
-    font: fontName.replace(".json", ""),
-    fontSize: 100,
-    kerning: kerningTable,
-  };
-  const fs = await import("fs");
-  fs.writeFileSync(fontName, JSON.stringify(output, null, 2));
-  return { outputPath: fontName, kerningTable };
+
+  if (writeFile) {
+    const output = {
+      font: fontName.replace(".json", ""),
+      fontSize: 100,
+      kerning: kerningTable,
+    };
+    const fs = await import("fs");
+    fs.writeFileSync(fontName, JSON.stringify(output, null, 2));
+    return { outputPath: fontName, kerningTable };
+  }
+
+  return { kerningTable };
 }

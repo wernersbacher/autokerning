@@ -54,11 +54,11 @@ function findS(font: opentype.Font): [number, number] {
 (async () => {
   if (outputFile) {
     // Generate kerning JSON file for font, optionally with user pairs
-    const { outputPath, kerningTable } = await generateKerningTable(
-      fontfile,
-      outputFile,
-      pairsList
-    );
+    const { outputPath, kerningTable } = await generateKerningTable(fontfile, {
+      outputfile: outputFile,
+      pairs: pairsList,
+      writeFile: true,
+    });
     console.log(`Kerning table saved to: ${outputPath}`);
     console.log(`Total pairs: ${Object.keys(kerningTable).length}`);
     return;
