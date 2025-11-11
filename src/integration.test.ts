@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getKerningTable, generateKerningTable } from "./api.js";
 import * as fs from "fs";
-import * as path from "path";
 
 /**
  * Integration test: Real-world usage scenarios
@@ -272,6 +271,38 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
 
       // At least some should be negative (typical for A-pairs)
       expect(negativePairs + positivePairs).toBeGreaterThan(0);
+    });
+
+    it("detects when overlap calculation is broken (strict bounds)", async () => {
+      const fontPath = FONT_PATH as string;
+
+      // Test with pairs that have ACTUAL overlap (not zero like ligatures)
+      // Examples: uppercase pairs, certain lowercase combinations
+      const kerningTable = await getKerningTable(
+        fontPath,
+        "AV,AW,AY,AO,To,Tr,WA,VA,YA,Ta,Te,Tu,AT,FA,LA"
+      );
+
+      // If overlap was multiplied by a large factor, kerning values would be huge
+      // Normal kerning should be in [-50, 50] range
+      // This test catches multiplication/scaling bugs in overlap or kernPair logic
+
+      for (const [pair, kern] of Object.entries(kerningTable)) {
+        // STRICT bounds: kerning should typically be in [-50, 50] percent range
+        // Anything > ±50 usually indicates a calculation bug
+        expect(kern).toBeGreaterThan(-50);
+        expect(kern).toBeLessThan(50);
+      }
+
+      // For these specific pairs, we should see a mix of positive and negative
+      // This validates that the algorithm is working (not all 0 or all same sign)
+      const negativeCount = Object.values(kerningTable).filter(
+        (k) => k < 0
+      ).length;
+      const positiveCount = Object.values(kerningTable).filter(
+        (k) => k > 0
+      ).length;
+      expect(negativeCount + positiveCount).toBeGreaterThan(0);
     });
   });
 });

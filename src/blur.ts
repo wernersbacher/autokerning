@@ -5,8 +5,14 @@ import config from "./config.js";
 export function gaussianBlur(
   input: NdArray<Float32Array>,
   // Use factor from config so it is centrally adjustable
-  sigma = config.BLUR_SIGMA_FACTOR * input.shape[1]
+  sigma = config.BLUR_SIGMA_FACTOR * input.shape[1],
+  // Optional: override sigma with fixed kernel width (for adaptive calibration)
+  kernelWidth?: number
 ): NdArray<Float32Array> {
+  // If kernelWidth is provided, use it to calculate sigma (like Python's adaptive calibration)
+  if (kernelWidth !== undefined) {
+    sigma = kernelWidth / 4; // Matches Python: c = KERNEL_WIDTH / 4
+  }
   const width = input.shape[1];
   const height = input.shape[0];
   const radius = Math.round(sigma);

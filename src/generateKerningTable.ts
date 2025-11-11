@@ -3,6 +3,7 @@ import { renderGlyph } from "./glyph.js";
 import { kernPair } from "./kernPair.js";
 import { gaussianBlur } from "./blur.js";
 import { overlap } from "./overlap.js";
+import config from "./config.js";
 
 // Common kerning pairs in typography
 const COMMON_PAIRS = [
@@ -72,20 +73,72 @@ const COMMON_PAIRS = [
   "he",
 ];
 
-/** Find overlap calibration thresholds */
-function findS(font: opentype.Font): [number, number] {
+/**
+ * Find overlap calibration thresholds with adaptive kernel width adjustment.
+ * Matches Python algorithm: find kernel size where min_s > max_s / 2
+ * @returns [minS, maxS, usedKernelWidth]
+ */
+function findS(font: opentype.Font): [number, number, number] {
   const TUNING_CHARS = "lno";
-  let ss: number[] = [];
-  for (const char of TUNING_CHARS) {
-    const glyph = renderGlyph(font, char);
-    const kern = kernPair(glyph, glyph, 0, 1e10);
-    const blurred = { ...glyph, bitmap: gaussianBlur(glyph.bitmap) };
-    const s = overlap(blurred, blurred, kern);
-    ss.push(s);
+  const FONT_SIZE = config.FONT_SIZE;
+  let kernelWidth = Math.round(0.2 * FONT_SIZE);
+  if (kernelWidth % 2 === 0) kernelWidth += 1; // Make it odd
+
+  let iteration = 0;
+  const MAX_ITERATIONS = 100; // Safety limit
+
+  while (iteration < MAX_ITERATIONS) {
+    iteration++;
+    const ss: number[] = [];
+
+    // Compute overlap for each tuning character
+    for (const char of TUNING_CHARS) {
+      const glyph = renderGlyph(font, char);
+      // Blur with current kernel width
+      const blurred = {
+        ...glyph,
+        bitmap: gaussianBlur(glyph.bitmap, undefined, kernelWidth),
+      };
+      // Glyph with itself (kern=0)
+      const s = overlap(blurred, blurred, 0);
+      ss.push(s);
+    }
+
+    const minS = Math.min(...ss);
+    const maxS = Math.max(...ss);
+    const ratio = minS / maxS;
+
+    console.info(
+      `findS iteration ${iteration}: kernelWidth=${kernelWidth}, minS=${minS.toFixed(
+        2
+      )}, maxS=${maxS.toFixed(2)}, ratio=${ratio.toFixed(3)}`
+    );
+
+    // Check calibration condition (matching Python algorithm)
+    if (minS > maxS / 2) {
+      console.info(
+        `✓ Calibration converged: kernelWidth=${kernelWidth}, minS=${minS.toFixed(
+          2
+        )}, maxS=${maxS.toFixed(2)}`
+      );
+      return [minS, maxS, kernelWidth];
+    }
+
+    // Kernel too small, increase it
+    kernelWidth += 2;
+
+    // Safety check
+    if (kernelWidth > 2 * FONT_SIZE) {
+      console.warn(
+        `⚠️ Failed to find reasonable kernel size (exceeded ${
+          2 * FONT_SIZE
+        }). Using kernelWidth=${kernelWidth - 2}`
+      );
+      return [minS, maxS, kernelWidth - 2];
+    }
   }
-  const minS = Math.min(...ss);
-  const maxS = Math.max(...ss);
-  return [minS, maxS];
+
+  throw new Error("findS: Max iterations exceeded");
 }
 
 /**
@@ -119,7 +172,7 @@ export async function generateKerningTable(
   }
 
   const font = await opentype.load(fontfile);
-  const [minS, maxS] = findS(font);
+  const [minS, maxS, kernelWidth] = findS(font);
 
   // Get font name for output file
   const fontName =
@@ -148,7 +201,8 @@ export async function generateKerningTable(
     }
     const left = renderGlyph(font, lch);
     const right = renderGlyph(font, rch);
-    const kernPx = kernPair(left, right, minS, maxS);
+    // Pass kernelWidth to kernPair for calibrated blur
+    const kernPx = kernPair(left, right, minS, maxS, kernelWidth);
     const kernPercent = (kernPx / left.advance) * 100;
     kerningTable[pair] = Math.round(kernPercent * 100) / 100;
   }
