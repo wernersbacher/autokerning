@@ -9,10 +9,10 @@ describe("generateKerningTable", () => {
       expect(generateKerningTable).toBeDefined();
     });
 
-    it("handles options parameter as string (backward compatibility)", async () => {
-      // Old API: generateKerningTable(fontfile, pairs)
-      // Should accept a second string parameter
-      expect(generateKerningTable.length).toBeGreaterThanOrEqual(1);
+    it("handles options parameter as array of strings", async () => {
+      // New API: generateKerningTable(fontfile, { pairs: ["AV", "AW"] })
+      // Should accept an array of pair strings
+      expect(generateKerningTable).toBeDefined();
     });
 
     it("handles options as object with pairs, outputfile, writeFile", async () => {
@@ -46,7 +46,7 @@ describe("generateKerningTable", () => {
       }
 
       const result = await generateKerningTable(process.env.FONT_PATH, {
-        pairs: "AV,AW,AY",
+        pairs: ["AV", "AW", "AY"],
         writeFile: false,
       });
 
@@ -96,7 +96,7 @@ describe("generateKerningTable", () => {
       }
 
       const result = await generateKerningTable(process.env.FONT_PATH, {
-        pairs: "AV,AW",
+        pairs: ["AV", "AW"],
         writeFile: false,
       });
 
@@ -114,7 +114,7 @@ describe("generateKerningTable", () => {
 
       // Most fonts don't have these glyphs
       const result = await generateKerningTable(process.env.FONT_PATH, {
-        pairs: "🌟🌟,❤️❤️",
+        pairs: ["🌟🌟", "❤️❤️"],
         writeFile: false,
       });
 
@@ -132,7 +132,7 @@ describe("generateKerningTable", () => {
       }
 
       const result = await generateKerningTable(process.env.FONT_PATH, {
-        pairs: "AV",
+        pairs: ["AV"],
         writeFile: false,
       });
 
@@ -149,7 +149,7 @@ describe("generateKerningTable", () => {
       }
 
       const result = await generateKerningTable(process.env.FONT_PATH, {
-        pairs: "AV,AW",
+        pairs: ["AV", "AW"],
         writeFile: false,
       });
 
@@ -167,12 +167,12 @@ describe("generateKerningTable", () => {
       }
 
       const result1 = await generateKerningTable(process.env.FONT_PATH, {
-        pairs: "AV,AW",
+        pairs: ["AV", "AW"],
         writeFile: false,
       });
 
       const result2 = await generateKerningTable(process.env.FONT_PATH, {
-        pairs: "AV,AW",
+        pairs: ["AV", "AW"],
         writeFile: false,
       });
 
@@ -189,9 +189,7 @@ describe("getKerningTable (API wrapper)", () => {
       return;
     }
 
-    const result = await getKerningTable(process.env.FONT_PATH, "AV,AW");
-
-    // Should return just the kerningTable, not the wrapper object
+    const result = await getKerningTable(process.env.FONT_PATH, ["AV", "AW"]); // Should return just the kerningTable, not the wrapper object
     expect(typeof result).toBe("object");
     expect(result).not.toHaveProperty("outputPath");
     // Should have kerning pairs
@@ -207,7 +205,7 @@ describe("getKerningTable (API wrapper)", () => {
       return;
     }
 
-    const result = await getKerningTable(process.env.FONT_PATH, "AV");
+    const result = await getKerningTable(process.env.FONT_PATH, ["AV"]);
 
     // If AV pair exists in font, should be computed
     if ("AV" in result) {

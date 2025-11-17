@@ -7,14 +7,16 @@ autokerning computes suggested kerning values for glyph pairs from TrueType/Open
 **Get kerning table (no file):**
 
 ```js
-const kerning = await getKerningTable('./fonts/Roboto-Black.ttf', 'AV,To,Wa');
+const kerning = await getKerningTable('./fonts/Roboto-Black.ttf', ['AV', 'To', 'Wa']);
 ```
 
 **Generate and save JSON:**
 
 ```js
+const myPairs = ['AV', 'To', 'Wa']
 const { outputPath } = await generateKerningTable('./fonts/Roboto-Black.ttf', {
   outputfile: 'Roboto-Black.json',
+  pairs: myPairs,
   writeFile: true,
 });
 ```

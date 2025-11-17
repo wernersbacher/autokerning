@@ -27,7 +27,12 @@ program
 const fontfile = program.args[0];
 let pairs = program.args.slice(1);
 const outputFile = program.opts().output;
-const pairsList = program.opts().pairs;
+const pairsString = program.opts().pairs;
+
+// Convert comma-separated pairs string to array
+const pairsList = pairsString
+  ? pairsString.split(",").map((p: string) => p.trim())
+  : undefined;
 
 import { COMMON_PAIRS } from "./commonPairs.js";
 

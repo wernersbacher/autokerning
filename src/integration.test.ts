@@ -30,7 +30,7 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
       const fontPath = FONT_PATH as string;
 
       // User loads a font and wants kerning for these specific pairs
-      const pairs = "AV,AW,To,Tr";
+      const pairs = ["AV", "AW", "To", "Tr"];
       const kerningTable = await getKerningTable(fontPath, pairs);
 
       // Verify we got results back
@@ -48,7 +48,7 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
 
     it("kerning values are usable in a design application", async () => {
       const fontPath = FONT_PATH as string;
-      const kerningTable = await getKerningTable(fontPath, "AV,To");
+      const kerningTable = await getKerningTable(fontPath, ["AV", "To"]);
 
       // User needs: pair → kern value for rendering
       for (const [pair, kern] of Object.entries(kerningTable)) {
@@ -81,7 +81,7 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
       const fontPath = FONT_PATH as string;
 
       const result = await generateKerningTable(fontPath, {
-        pairs: "AV,AW,AY,To,Tr",
+        pairs: ["AV", "AW", "AY", "To", "Tr"],
         writeFile: false,
       });
 
@@ -101,8 +101,8 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
       const fontPath = FONT_PATH as string;
 
       // User wants to compare kerning for different pair sets
-      const result1 = await getKerningTable(fontPath, "AV,AW,AY");
-      const result2 = await getKerningTable(fontPath, "To,Tr,Ta");
+      const result1 = await getKerningTable(fontPath, ["AV", "AW", "AY"]);
+      const result2 = await getKerningTable(fontPath, ["To", "Tr", "Ta"]);
 
       // Results should be independent
       expect(result1).toBeDefined();
@@ -110,13 +110,15 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
 
       // AV should only be in first set
       if ("AV" in result1) {
-        expect(result1.AV).toEqual((await getKerningTable(fontPath, "AV")).AV);
+        expect(result1.AV).toEqual(
+          (await getKerningTable(fontPath, ["AV"])).AV
+        );
       }
     });
 
     it("produces consistent results for repeated requests", async () => {
       const fontPath = FONT_PATH as string;
-      const pairs = "AV,To,WA";
+      const pairs = ["AV", "To", "WA"];
 
       // User calls the API multiple times with same parameters
       const result1 = await getKerningTable(fontPath, pairs);
@@ -137,7 +139,7 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
       expect(fs.existsSync(fontPath)).toBe(true);
 
       // Step 2: User requests kerning for their text
-      const pairs = "AV,AW,To,Tr,WA,VA";
+      const pairs = ["AV", "AW", "To", "Tr", "WA", "VA"];
       const kerningTable = await getKerningTable(fontPath, pairs);
 
       // Step 3: User has kerning values ready to use
@@ -163,7 +165,7 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
 
       // User requests pairs that might not exist in font
       // (e.g., special characters, emojis)
-      const result = await getKerningTable(fontPath, "🌟🌟,❤️❤️,AV");
+      const result = await getKerningTable(fontPath, ["🌟🌟", "❤️❤️", "AV"]);
 
       // Should not crash, just skip missing pairs
       expect(result).toBeDefined();
@@ -177,7 +179,7 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
       const fontPath = FONT_PATH as string;
 
       // User passes empty pairs
-      const result = await getKerningTable(fontPath, "");
+      const result = await getKerningTable(fontPath, []);
 
       // Should use COMMON_PAIRS instead
       expect(Object.keys(result).length).toBeGreaterThan(0);
@@ -187,9 +189,44 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
       const fontPath = FONT_PATH as string;
 
       // User requests many pairs at once
-      const manyPairs =
-        "AV,AW,AY,AO,AC,AT,AF,AB,AD,AG,AJ,AQ,AR,AS,AL,AU,AX,AZ," +
-        "VA,TA,FA,Pa,To,Tw,Ty,Te,Tr,WA,WO,Wa,Ye,Yo,Yp,Yd,La,Lo";
+      const manyPairs = [
+        "AV",
+        "AW",
+        "AY",
+        "AO",
+        "AC",
+        "AT",
+        "AF",
+        "AB",
+        "AD",
+        "AG",
+        "AJ",
+        "AQ",
+        "AR",
+        "AS",
+        "AL",
+        "AU",
+        "AX",
+        "AZ",
+        "VA",
+        "TA",
+        "FA",
+        "Pa",
+        "To",
+        "Tw",
+        "Ty",
+        "Te",
+        "Tr",
+        "WA",
+        "WO",
+        "Wa",
+        "Ye",
+        "Yo",
+        "Yp",
+        "Yd",
+        "La",
+        "Lo",
+      ];
 
       const result = await getKerningTable(fontPath, manyPairs);
 
@@ -205,7 +242,7 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
 
       // User can use generateKerningTable with full options
       const result = await generateKerningTable(fontPath, {
-        pairs: "AV,AW,To",
+        pairs: ["AV", "AW", "To"],
         writeFile: false,
         // outputfile would be used if they wanted to write to disk
       });
@@ -223,10 +260,18 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
     it("computed kerning values are reasonable", async () => {
       const fontPath = FONT_PATH as string;
 
-      const kerningTable = await getKerningTable(
-        fontPath,
-        "AV,AW,AY,To,Tr,WA,VA,Ta,Te,Ye"
-      );
+      const kerningTable = await getKerningTable(fontPath, [
+        "AV",
+        "AW",
+        "AY",
+        "To",
+        "Tr",
+        "WA",
+        "VA",
+        "Ta",
+        "Te",
+        "Ye",
+      ]);
 
       // Check for reasonable values
       for (const [pair, kern] of Object.entries(kerningTable)) {
@@ -245,7 +290,12 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
     it("large pairs have similar characteristics", async () => {
       const fontPath = FONT_PATH as string;
 
-      const kerningTable = await getKerningTable(fontPath, "AV,AW,AY,AO");
+      const kerningTable = await getKerningTable(fontPath, [
+        "AV",
+        "AW",
+        "AY",
+        "AO",
+      ]);
 
       // Pairs starting with same letter should have similar patterns
       const aVPairs = Object.entries(kerningTable).filter(([pair]) =>
@@ -267,10 +317,23 @@ describe.skipIf(!FONT_PATH)("Integration: Real-world usage", () => {
 
       // Test with pairs that have ACTUAL overlap (not zero like ligatures)
       // Examples: uppercase pairs, certain lowercase combinations
-      const kerningTable = await getKerningTable(
-        fontPath,
-        "AV,AW,AY,AO,To,Tr,WA,VA,YA,Ta,Te,Tu,AT,FA,LA"
-      );
+      const kerningTable = await getKerningTable(fontPath, [
+        "AV",
+        "AW",
+        "AY",
+        "AO",
+        "To",
+        "Tr",
+        "WA",
+        "VA",
+        "YA",
+        "Ta",
+        "Te",
+        "Tu",
+        "AT",
+        "FA",
+        "LA",
+      ]);
 
       // If overlap was multiplied by a large factor, kerning values would be huge
       // Normal kerning should be in [-50, 50] range

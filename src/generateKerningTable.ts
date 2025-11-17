@@ -79,26 +79,23 @@ export function findS(font: opentype.Font): [number, number, number] {
  * Generate kerning table for a font file.
  * @param fontfile Path to font file
  * @param outputfile Output file path (optional)
- * @param pairs Comma-separated string of pairs to analyze (optional)
+ * @param pairs Array of pairs to analyze (optional)
  */
 export type GenerateKerningOptions = {
-  pairs?: string; // comma-separated pairs
+  pairs?: string[]; // array of pairs
   outputfile?: string; // filename to write, if undefined no write performed unless writeFile=true
   writeFile?: boolean; // default true for backward compatibility
 };
 
 export async function generateKerningTable(
   fontfile: string,
-  opts: GenerateKerningOptions | string | undefined = undefined
+  opts: GenerateKerningOptions | undefined = undefined
 ): Promise<{ outputPath?: string; kerningTable: Record<string, number> }> {
   let outputfile: string | undefined;
-  let pairs: string | undefined;
+  let pairs: string[] | undefined;
   let writeFile = true;
 
-  if (typeof opts === "string") {
-    // old 2nd arg was pairs
-    pairs = opts;
-  } else if (typeof opts === "object" && opts !== null) {
+  if (typeof opts === "object" && opts !== null) {
     outputfile = (opts as GenerateKerningOptions).outputfile;
     pairs = (opts as GenerateKerningOptions).pairs;
     writeFile = (opts as GenerateKerningOptions).writeFile ?? true;
@@ -117,11 +114,8 @@ export async function generateKerningTable(
 
   // Determine pairs to analyze
   let pairList: string[];
-  if (pairs && pairs.trim().length > 0) {
-    pairList = pairs
-      .split(",")
-      .map((p) => p.trim())
-      .filter((p) => p.length === 2);
+  if (pairs && pairs.length > 0) {
+    pairList = pairs.filter((p) => p.length === 2);
   } else {
     pairList = COMMON_PAIRS.filter((p) => p.length === 2);
   }
