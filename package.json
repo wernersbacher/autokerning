@@ -1,6 +1,6 @@
 {
   "name": "autokerning",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "author": "wernersbacher <wernersbacher@gmail.com>",
   "type": "module",
   "main": "dist/index.js",
