@@ -91,7 +91,6 @@ export async function generateKerningTable(
   fontfile: string,
   opts: GenerateKerningOptions | string | undefined = undefined
 ): Promise<{ outputPath?: string; kerningTable: Record<string, number> }> {
-  // Backwards-compatible call signatures: (fontfile, outputfile, pairs)
   let outputfile: string | undefined;
   let pairs: string | undefined;
   let writeFile = true;
