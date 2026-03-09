@@ -1,6 +1,6 @@
 {
   "name": "autokerning",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "wernersbacher <wernersbacher@gmail.com>",
   "type": "module",
   "main": "dist/index.js",
@@ -34,14 +34,14 @@
   ],
   "devDependencies": {
     "@types/ndarray": "^1.0.14",
-    "@types/node": "^22.0.0",
-    "@types/opentype.js": "^1.3.8",
+    "@types/node": "^25.3.5",
+    "@types/opentype.js": "^1.3.9",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.18"
   },
   "dependencies": {
-    "canvas": "^3.2.0",
-    "commander": "^14.0.2",
+    "canvas": "^3.2.1",
+    "commander": "^14.0.3",
     "ndarray": "^1.0.19",
     "opentype.js": "^1.3.4"
   },
